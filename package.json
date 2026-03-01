@@ -1,0 +1,10 @@
+{
+  "name": "powerflow-bar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check:syntax": "node --check dist/powerflow_bar.js"
+  }
+}

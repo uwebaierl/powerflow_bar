@@ -1,0 +1,6 @@
+{
+  "name": "PowerFlow Bar",
+  "render_readme": true,
+  "content_in_root": false,
+  "filename": "powerflow_bar.js"
+}
