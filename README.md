@@ -23,23 +23,41 @@ PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flo
 - Configurable icons (`icons.*`)
 - Decimal precision control (`value_decimals` from `0` to `2`)
 
-## Installation (HACS)
+## Installation
 
-1. Open HACS in Home Assistant.
-2. Go to `Frontend`.
-3. Open the 3-dot menu and select `Custom repositories`.
-4. Add this repository URL.
-5. Select category `Dashboard`.
-6. Install **PowerFlow Bar** from HACS.
-7. Reload Home Assistant frontend (or restart Home Assistant).
+### HACS (Recommended)
 
-Resource handling:
+- Add this repository via the link in Home Assistant.
 
-- HACS usually registers the resource automatically.
-- If not, add this resource manually in Dashboard resources:
+[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=uwebaierl&repository=powerflow_bar&category=plugin)
+
+- **PowerFlow Bar** should now be available in HACS. Click `INSTALL`.
+- The Lovelace resource is usually added automatically.
+- Reload the Home Assistant frontend if prompted.
+
+### HACS (manual)
+
+1. Ensure HACS is installed.
+2. Open HACS and add `https://github.com/uwebaierl/powerflow_bar` as a custom repository.
+3. Select category `Dashboard`.
+4. Search for **PowerFlow Bar** and install it.
+5. Reload resources if prompted.
+
+If HACS does not add the resource automatically, add this Dashboard resource manually:
 
 ```yaml
-url: /hacsfiles/<repository-name>/powerflow_bar.js
+url: /hacsfiles/powerflow_bar/powerflow_bar.js
+type: module
+```
+
+### Manual Installation
+
+1. Download `powerflow_bar.js` from the [Releases](../../releases) page.
+2. Upload it to `www/community/powerflow_bar/` in your Home Assistant config directory.
+3. Add this resource in Dashboard configuration:
+
+```yaml
+url: /local/community/powerflow_bar/powerflow_bar.js
 type: module
 ```
 
