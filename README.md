@@ -2,10 +2,8 @@
 
 ## Screenshots
 
-Placeholder paths for future screenshots:
-
-![PowerFlow Bar Overview](docs/images/powerflow-bar-overview.png)
-![PowerFlow Bar Editor](docs/images/powerflow-bar-editor.png)
+![PowerFlow Bar Overview](docs/images/powerflow_bar_01.png)
+![PowerFlow Bar Editor](docs/images/powerflow_bar_02.png)
 
 PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flow in a single animated segmented bar.
 
