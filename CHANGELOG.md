@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and this project uses Semantic Versioning.
 
+## [1.0.1] - 2026-03-02
+
+### Changed
+- Updated README screenshots to use absolute raw GitHub image URLs for better compatibility with HACS rendering.
+
 ## [1.0.0] - 2026-03-02
 
 ### Changed
