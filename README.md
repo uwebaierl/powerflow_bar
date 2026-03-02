@@ -1,5 +1,9 @@
 # PowerFlow Bar
 
+[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
+[![Release](https://img.shields.io/github/v/release/uwebaierl/powerflow_bar)](https://github.com/uwebaierl/powerflow_bar/releases)
+[![License](https://img.shields.io/github/license/uwebaierl/powerflow_bar)](LICENSE)
+
 ## Screenshots
 
 <img width="70%" height="auto" alt="PowerFlow Bar Overview" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_01.png" />
