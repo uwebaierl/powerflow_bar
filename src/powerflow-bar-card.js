@@ -143,60 +143,61 @@ const VISIBILITY_FIELD_BY_PATH = Object.fromEntries(
 
 const MAIN_ENTITY_EDITOR_SECTIONS = [
   {
-    entityKey: "pv",
+    id: "pv",
     title: "PV",
-    iconKey: "pv",
-    colorKey: "pv",
     visibilityKey: "pv",
-    visibilityTitle: "PV segment visibility",
+    visibilityTitle: "PV segment hysteresis",
+    fields: [
+      { entityKey: "pv", label: "PV", iconKey: "pv", colorKey: "pv" },
+    ],
   },
   {
-    entityKey: "battery_charge",
-    title: "Battery Charge",
-    iconKey: "battery_charge",
-    colorKey: "battery_charge",
-    hint: "Use together with Battery Discharge when Battery Output is not configured.",
+    id: "battery",
+    title: "Battery",
+    hint: "Configure Battery Output, or configure both Battery Charge and Battery Discharge.",
     visibilityKey: "battery",
-    visibilityTitle: "Shared battery segment visibility",
+    visibilityTitle: "Battery segment hysteresis",
+    fields: [
+      { entityKey: "battery_charge", label: "Charge", iconKey: "battery_charge", colorKey: "battery_charge" },
+      { entityKey: "battery_discharge", label: "Discharge", iconKey: "battery_discharge", colorKey: "battery_discharge" },
+    ],
   },
   {
-    entityKey: "battery_discharge",
-    title: "Battery Discharge",
-    iconKey: "battery_discharge",
-    colorKey: "battery_discharge",
-    hint: "Use together with Battery Charge when Battery Output is not configured.",
-  },
-  {
-    entityKey: "battery_output",
+    id: "battery_output",
     title: "Battery Output",
-    iconKey: "battery_output",
-    colorKey: "battery_output",
     hint: "Recommended. Alternative: configure both Battery Charge and Battery Discharge.",
     visibilityKey: "battery_output",
-    visibilityTitle: "Battery output segment visibility",
+    visibilityTitle: "Battery output segment hysteresis",
+    fields: [
+      { entityKey: "battery_output", label: "Battery Output", iconKey: "battery_output", colorKey: "battery_output" },
+    ],
   },
   {
-    entityKey: "home_consumption",
+    id: "home_consumption",
     title: "Home Consumption",
-    iconKey: "home_consumption",
-    colorKey: "home_consumption",
+    fields: [
+      { entityKey: "home_consumption", label: "Home Consumption", iconKey: "home_consumption", colorKey: "home_consumption" },
+    ],
   },
   {
-    entityKey: "grid_import",
-    title: "Grid Import",
-    iconKey: "grid_import",
-    colorKey: "grid_import",
+    id: "grid",
+    title: "Grid",
     visibilityKey: "grid",
-    visibilityTitle: "Shared grid segment visibility",
+    visibilityTitle: "Grid segment hysteresis",
+    fields: [
+      { entityKey: "grid_import", label: "Import", iconKey: "grid_import", colorKey: "grid_import" },
+      { entityKey: "grid_export", label: "Export", iconKey: "grid_export", colorKey: "grid_export" },
+    ],
   },
   {
-    entityKey: "grid_export",
-    title: "Grid Export",
-    iconKey: "grid_export",
-    colorKey: "grid_export",
+    id: "home_coverage",
+    title: "Home Coverage (optional)",
+    fields: [
+      { entityKey: "home_coverage", label: "Home Coverage" },
+    ],
   },
-  { entityKey: "home_coverage", title: "Home Coverage (optional)" },
 ];
+const EDITOR_ENTITY_FIELDS = MAIN_ENTITY_EDITOR_SECTIONS.flatMap((section) => section.fields);
 
 const CARD_COLOR_KEYS = ["background", "track", "text"];
 const REQUIRED_ENTITY_KEYS = new Set(["pv", "home_consumption", "grid_import", "grid_export"]);
@@ -693,7 +694,6 @@ class PowerFlowBarEditor extends HTMLElement {
     this._numberSelectors = {};
     this._iconSelectors = {};
     this._booleanSelectors = {};
-    this._visibilitySelectors = {};
     this._entityCards = {};
     this._inlineErrors = {};
     this._onFormChange = (event) => this._handleFormChange(event);
@@ -786,7 +786,6 @@ class PowerFlowBarEditor extends HTMLElement {
       this._buildNumberSelectors();
       this._buildIconSelectors();
       this._buildBooleanSelectors();
-      this._buildVisibilitySelectors();
       this._collectEditorRefs();
       this._rendered = true;
     }
@@ -797,9 +796,10 @@ class PowerFlowBarEditor extends HTMLElement {
     this._entityCards = {};
     this._inlineErrors = {};
     for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      const key = section.entityKey;
-      this._entityCards[key] = this.shadowRoot.querySelector(`[data-entity-card="${key}"]`);
-      this._inlineErrors[key] = this.shadowRoot.querySelector(`[data-inline-error="${key}"]`);
+      this._entityCards[section.id] = this.shadowRoot.querySelector(`[data-entity-card="${section.id}"]`);
+      for (const field of section.fields) {
+        this._inlineErrors[field.entityKey] = this.shadowRoot.querySelector(`[data-inline-error="${field.entityKey}"]`);
+      }
     }
     this._refs.validation = this.shadowRoot.querySelector("#entity-validation");
   }
@@ -808,8 +808,8 @@ class PowerFlowBarEditor extends HTMLElement {
     if (!this.shadowRoot) {
       return;
     }
-    for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      const key = section.entityKey;
+    for (const field of EDITOR_ENTITY_FIELDS) {
+      const key = field.entityKey;
       const slot = this.shadowRoot.querySelector(`[data-entity-slot="${key}"]`);
       if (!slot) {
         continue;
@@ -888,38 +888,6 @@ class PowerFlowBarEditor extends HTMLElement {
     }
   }
 
-  _buildVisibilitySelectors() {
-    if (!this.shadowRoot) {
-      return;
-    }
-    for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      if (!section.visibilityKey) {
-        continue;
-      }
-      for (const field of VISIBILITY_THRESHOLD_FIELDS) {
-        const path = `hysteresis.${section.visibilityKey}.${field.leaf}`;
-        const slot = this.shadowRoot.querySelector(`[data-visibility-slot="${path}"]`);
-        if (!slot || this._visibilitySelectors[path]) {
-          continue;
-        }
-        const selector = document.createElement("ha-selector");
-        selector.dataset.visibilityPath = path;
-        selector.configPath = path;
-        selector.selector = {
-          number: {
-            min: field.min,
-            max: field.max,
-            step: field.step,
-            mode: "box",
-          },
-        };
-        selector.value = DEFAULT_VISIBILITY[section.visibilityKey][field.leaf];
-        slot.appendChild(selector);
-        this._visibilitySelectors[path] = selector;
-      }
-    }
-  }
-
   _syncEntityPickerHass() {
     for (const picker of Object.values(this._entityPickers)) {
       picker.hass = this._hass;
@@ -931,9 +899,6 @@ class PowerFlowBarEditor extends HTMLElement {
       selector.hass = this._hass;
     }
     for (const selector of Object.values(this._booleanSelectors)) {
-      selector.hass = this._hass;
-    }
-    for (const selector of Object.values(this._visibilitySelectors)) {
       selector.hass = this._hass;
     }
   }
@@ -980,11 +945,11 @@ class PowerFlowBarEditor extends HTMLElement {
 
     for (const segmentKey of VISIBILITY_SEGMENT_KEYS) {
       for (const field of VISIBILITY_THRESHOLD_FIELDS) {
-        const path = `hysteresis.${segmentKey}.${field.leaf}`;
-        const selector = this._visibilitySelectors[path];
-        if (selector) {
-          selector.value = cfg.hysteresis?.[segmentKey]?.[field.leaf] ?? DEFAULT_VISIBILITY[segmentKey][field.leaf];
-        }
+        setInputValue(
+          this.shadowRoot,
+          `hysteresis.${segmentKey}.${field.leaf}`,
+          cfg.hysteresis?.[segmentKey]?.[field.leaf] ?? DEFAULT_VISIBILITY[segmentKey][field.leaf],
+        );
       }
     }
 
@@ -1008,6 +973,13 @@ class PowerFlowBarEditor extends HTMLElement {
       const normalized = normalizeHexColor(target.value, DEFAULT_PALETTE[paletteKey] || "#000000");
       target.value = normalized;
       this._updateConfigPath(target.name, normalized);
+      return;
+    }
+    if (VISIBILITY_FIELD_BY_PATH[target.name]) {
+      const field = VISIBILITY_FIELD_BY_PATH[target.name];
+      const numeric = parseNumberRange(target.value, 0, field.min, field.max, false);
+      target.value = String(numeric);
+      this._updateConfigPath(target.name, numeric);
     }
   }
 
@@ -1024,6 +996,12 @@ class PowerFlowBarEditor extends HTMLElement {
       const normalized = normalizeHexColor(target.value, DEFAULT_PALETTE[paletteKey] || "#000000");
       target.value = normalized;
       this._updateConfigPath(target.name, normalized);
+      return;
+    }
+    if (VISIBILITY_FIELD_BY_PATH[target.name]) {
+      const field = VISIBILITY_FIELD_BY_PATH[target.name];
+      const numeric = parseNumberRange(target.value, 0, field.min, field.max, false);
+      this._updateConfigPath(target.name, numeric);
     }
   }
 
@@ -1101,10 +1079,8 @@ class PowerFlowBarEditor extends HTMLElement {
     }
 
     for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      const key = section.entityKey;
-      const card = this._entityCards[key];
-      const inlineError = this._inlineErrors[key];
-      const hasError = Boolean(fieldErrors[key]);
+      const card = this._entityCards[section.id];
+      const hasError = section.fields.some((field) => Boolean(fieldErrors[field.entityKey]));
 
       if (card) {
         card.classList.toggle("invalid", hasError);
@@ -1112,8 +1088,11 @@ class PowerFlowBarEditor extends HTMLElement {
           card.open = true;
         }
       }
-      if (inlineError) {
-        inlineError.textContent = fieldErrors[key] || "";
+      for (const field of section.fields) {
+        const inlineError = this._inlineErrors[field.entityKey];
+        if (inlineError) {
+          inlineError.textContent = fieldErrors[field.entityKey] || "";
+        }
       }
     }
 
@@ -1261,10 +1240,27 @@ function buildEditorMarkup() {
         padding: 10px;
       }
 
+      .entity-subsection {
+        display: grid;
+        gap: 8px;
+      }
+
+      .entity-subsection + .entity-subsection {
+        padding-top: 10px;
+        border-top: 1px solid color-mix(in srgb, var(--divider-color, rgba(127, 127, 127, 0.3)) 70%, transparent);
+      }
+
       .entity-title {
         margin: 0;
         font-size: 13px;
         font-weight: 600;
+      }
+
+      .entity-subtitle {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--primary-text-color, inherit);
       }
 
       .entity-hint {
@@ -1320,6 +1316,18 @@ function buildEditorMarkup() {
         background: transparent;
       }
 
+      .field input[type="number"] {
+        min-height: 36px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
+        border-radius: 8px;
+        background: transparent;
+        color: var(--primary-text-color, inherit);
+        font: inherit;
+      }
+
       .selector-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1354,7 +1362,7 @@ function buildEditorMarkup() {
       </details>
       <section class="section">
         <h3>Main Entities</h3>
-        <p class="section-note">Each block has its own entity picker, icon and color. Hysteresis is configured per rendered segment.</p>
+        <p class="section-note">Each rendered segment has its own entity mapping, icon, color, and optional hysteresis settings.</p>
         <div id="entity-validation" class="validation" hidden></div>
         <div class="entity-grid">
           ${MAIN_ENTITY_EDITOR_SECTIONS.map((section) => buildEntitySectionCard(section)).join("")}
@@ -1389,42 +1397,52 @@ function buildBooleanSelectorSlot(field) {
 }
 
 function buildEntitySectionCard(section) {
-  const iconField = section.iconKey
-    ? `
-      <div class="field">
-        <div class="field-meta">
-          <span class="field-label-strong">Icon</span>
-        </div>
-        <div class="selector-slot" data-icon-slot="${section.iconKey}"></div>
-      </div>
-    `
-    : "";
-  const colorField = section.colorKey
-    ? buildColorField(`palette.${section.colorKey}`, "Color")
-    : "";
   const visibilityFields = section.visibilityKey
     ? buildVisibilityFieldGroup(section.visibilityKey, section.visibilityTitle || "Segment visibility")
     : "";
   const hint = section.hint ? `<p class="entity-hint">${section.hint}</p>` : "";
   return `
-    <details class="entity-card" data-entity-card="${section.entityKey}">
+    <details class="entity-card" data-entity-card="${section.id}">
       <summary class="entity-summary">
         <h4 class="entity-title">${section.title}</h4>
       </summary>
       <div class="entity-content">
         ${hint}
-        <div class="field">
-          <div class="field-meta">
-            <span class="field-label-strong">Entity</span>
-          </div>
-          <div class="entity-picker-slot" data-entity-slot="${section.entityKey}"></div>
-        </div>
-        ${iconField}
-        ${colorField}
+        ${section.fields.map((field) => buildEntityFieldBlock(field)).join("")}
         ${visibilityFields}
-        <p class="entity-inline-error" data-inline-error="${section.entityKey}"></p>
       </div>
     </details>
+  `;
+}
+
+function buildEntityFieldBlock(field) {
+  const iconField = field.iconKey
+    ? `
+      <div class="field">
+        <div class="field-meta">
+          <span class="field-label-strong">Icon</span>
+        </div>
+        <div class="selector-slot" data-icon-slot="${field.iconKey}"></div>
+      </div>
+    `
+    : "";
+  const colorField = field.colorKey
+    ? buildColorField(`palette.${field.colorKey}`, "Color")
+    : "";
+
+  return `
+    <div class="entity-subsection">
+      <h5 class="entity-subtitle">${field.label}</h5>
+      <div class="field">
+        <div class="field-meta">
+          <span class="field-label-strong">Entity</span>
+        </div>
+        <div class="entity-picker-slot" data-entity-slot="${field.entityKey}"></div>
+      </div>
+      ${iconField}
+      ${colorField}
+      <p class="entity-inline-error" data-inline-error="${field.entityKey}"></p>
+    </div>
   `;
 }
 
@@ -1433,7 +1451,6 @@ function buildVisibilityFieldGroup(segmentKey, title) {
     <div class="field">
       <div class="field-meta">
         <span class="field-label-strong">${title}</span>
-        <p class="field-help">Show uses the upper threshold. Hide uses the lower threshold. Defaults \`0 / 0\` mean visible above \`0 W\`.</p>
       </div>
       <div class="selector-grid">
         ${VISIBILITY_THRESHOLD_FIELDS.map((field) => `
@@ -1442,7 +1459,13 @@ function buildVisibilityFieldGroup(segmentKey, title) {
               <span class="field-label">${field.label}</span>
               <p class="field-help">${field.help}</p>
             </div>
-            <div class="selector-slot" data-visibility-slot="hysteresis.${segmentKey}.${field.leaf}"></div>
+            <input
+              type="number"
+              name="hysteresis.${segmentKey}.${field.leaf}"
+              min="${field.min}"
+              max="${field.max}"
+              step="${field.step}"
+            />
           </div>
         `).join("")}
       </div>
