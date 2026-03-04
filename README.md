@@ -22,6 +22,7 @@ PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flo
 - Optional transparent card background (`background_transparent`)
 - Configurable icons (`icons.*`)
 - Decimal precision control (`value_decimals` from `0` to `2`)
+- Adjustable height and corner radius to match [Bubble Card](https://github.com/Clooos/Bubble-Card) layouts cleanly
 
 ## Combined Setup
 
