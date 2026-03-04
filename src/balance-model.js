@@ -1,4 +1,4 @@
-import { DEFAULT_ICONS } from "./constants.js";
+import { DEFAULT_ICONS, DEFAULT_VISIBILITY } from "./constants.js";
 
 const CORE_REQUIRED_ENTITY_KEYS = [
   "pv",
@@ -15,12 +15,12 @@ const DEFAULT_MIN_OTHER = 0.07;
 const HOME_BIAS_FACTOR = 0.8;
 const HOME_DOMINANCE_RATIO = 1.55;
 
-export function computeBalanceModel(config, hass) {
+export function computeBalanceModel(config, hass, visibilityState) {
   const input = resolveInputWatts(config, hass);
   const blocks = buildBlocks(input, config);
   const baseWidths = computeSegmentWidths(input);
   const order = computeSegmentOrder(input);
-  const visible_keys = buildVisibleKeys(blocks);
+  const visible_keys = buildVisibleKeys(blocks, config, visibilityState);
   const widths = maskWidthsToVisible(baseWidths, visible_keys);
 
   return {
@@ -32,11 +32,11 @@ export function computeBalanceModel(config, hass) {
   };
 }
 
-function buildVisibleKeys(blocks) {
-  const pvActive = isPositiveBlock(blocks.pv);
-  const batteryActive = isPositiveBlock(blocks.battery);
-  const batteryOutputActive = isPositiveBlock(blocks.battery_output);
-  const gridActive = isPositiveBlock(blocks.grid);
+function buildVisibleKeys(blocks, config, visibilityState) {
+  const pvActive = shouldShowBlock("pv", blocks.pv, config, visibilityState);
+  const batteryActive = shouldShowBlock("battery", blocks.battery, config, visibilityState);
+  const batteryOutputActive = shouldShowBlock("battery_output", blocks.battery_output, config, visibilityState);
+  const gridActive = shouldShowBlock("grid", blocks.grid, config, visibilityState);
 
   const visible = [];
   if (pvActive) {
@@ -55,8 +55,28 @@ function buildVisibleKeys(blocks) {
   return visible;
 }
 
-function isPositiveBlock(block) {
-  return (Number(block?.value_w) || 0) > 0;
+function shouldShowBlock(key, block, config, visibilityState) {
+  const currentValue = Math.max(0, Number(block?.value_w) || 0);
+  const thresholds = resolveVisibilityThresholds(config, key);
+  const wasVisible = visibilityState?.[key]?.visible === true;
+
+  if (wasVisible) {
+    return currentValue > thresholds.hide_threshold;
+  }
+
+  return currentValue > thresholds.show_threshold;
+}
+
+function resolveVisibilityThresholds(config, key) {
+  const configured = config?.hysteresis?.[key];
+  const defaults = DEFAULT_VISIBILITY[key] || DEFAULT_VISIBILITY.pv;
+  const showThreshold = Number(configured?.show_threshold);
+  const hideThreshold = Number(configured?.hide_threshold);
+
+  return {
+    show_threshold: Number.isFinite(showThreshold) ? Math.max(0, showThreshold) : defaults.show_threshold,
+    hide_threshold: Number.isFinite(hideThreshold) ? Math.max(0, hideThreshold) : defaults.hide_threshold,
+  };
 }
 
 function maskWidthsToVisible(widths, visibleKeys) {

@@ -2,7 +2,9 @@ import {
   CARD_ELEMENT_TAG,
   CARD_NAME,
   CARD_TYPE,
+  DEFAULT_VISIBILITY,
   DEFAULT_ICONS,
+  VISIBILITY_SEGMENT_KEYS,
 } from "./constants.js";
 import { SegmentedBarAnimator } from "./animation.js";
 import {
@@ -37,6 +39,10 @@ const DEFAULT_PALETTE = {
 };
 
 const SEGMENT_ORDER = ["pv", "battery", "battery_output", "home", "grid"];
+const COLOR_FADE_DURATION_MS = 260;
+const COLOR_FADE_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+const ICON_PULSE_DURATION_MS = 240;
+const VISIBILITY_TRANSITION_MS = 220;
 
 const EDITOR_NUMBER_FIELDS = [
   { key: "bar_height", label: "Bar height", min: 24, max: 72, step: 1 },
@@ -85,6 +91,24 @@ const PALETTE_FIELD_ORDER = [
   "track",
   "text",
 ];
+const VISIBILITY_THRESHOLD_FIELDS = [
+  {
+    leaf: "show_threshold",
+    label: "Show above (W)",
+    min: 0,
+    max: 5000,
+    step: 1,
+    help: "Segment appears when its value rises above this threshold.",
+  },
+  {
+    leaf: "hide_threshold",
+    label: "Hide at or below (W)",
+    min: 0,
+    max: 5000,
+    step: 1,
+    help: "Segment stays visible until its value drops to this threshold or lower.",
+  },
+];
 
 const ENTITY_LABELS = {
   pv: "PV",
@@ -110,14 +134,30 @@ const PALETTE_LABELS = {
   text: "Text",
 };
 
+const VISIBILITY_FIELD_BY_PATH = Object.fromEntries(
+  VISIBILITY_SEGMENT_KEYS.flatMap((segmentKey) => VISIBILITY_THRESHOLD_FIELDS.map((field) => [
+    `hysteresis.${segmentKey}.${field.leaf}`,
+    field,
+  ])),
+);
+
 const MAIN_ENTITY_EDITOR_SECTIONS = [
-  { entityKey: "pv", title: "PV", iconKey: "pv", colorKey: "pv" },
+  {
+    entityKey: "pv",
+    title: "PV",
+    iconKey: "pv",
+    colorKey: "pv",
+    visibilityKey: "pv",
+    visibilityTitle: "PV segment visibility",
+  },
   {
     entityKey: "battery_charge",
     title: "Battery Charge",
     iconKey: "battery_charge",
     colorKey: "battery_charge",
     hint: "Use together with Battery Discharge when Battery Output is not configured.",
+    visibilityKey: "battery",
+    visibilityTitle: "Shared battery segment visibility",
   },
   {
     entityKey: "battery_discharge",
@@ -132,6 +172,8 @@ const MAIN_ENTITY_EDITOR_SECTIONS = [
     iconKey: "battery_output",
     colorKey: "battery_output",
     hint: "Recommended. Alternative: configure both Battery Charge and Battery Discharge.",
+    visibilityKey: "battery_output",
+    visibilityTitle: "Battery output segment visibility",
   },
   {
     entityKey: "home_consumption",
@@ -144,6 +186,8 @@ const MAIN_ENTITY_EDITOR_SECTIONS = [
     title: "Grid Import",
     iconKey: "grid_import",
     colorKey: "grid_import",
+    visibilityKey: "grid",
+    visibilityTitle: "Shared grid segment visibility",
   },
   {
     entityKey: "grid_export",
@@ -189,6 +233,8 @@ export class PowerFlowBarCard extends HTMLElement {
     this._lastSignature = "";
     this._valueTweenRaf = 0;
     this._valueTweenState = createValueTweenState();
+    this._segmentVisibility = createSegmentVisibilityState();
+    this._segmentHideTimers = {};
     this._onMainClick = (event) => this._handleMainClick(event);
 
     this._animator = new SegmentedBarAnimator((widths) => {
@@ -212,6 +258,7 @@ export class PowerFlowBarCard extends HTMLElement {
       cancelAnimationFrame(this._valueTweenRaf);
       this._valueTweenRaf = 0;
     }
+    clearSegmentHideTimers(this._segmentHideTimers);
   }
 
   static getStubConfig() {
@@ -234,6 +281,7 @@ export class PowerFlowBarCard extends HTMLElement {
       icons: {
         ...DEFAULT_ICONS,
       },
+      hysteresis: cloneVisibilityConfig(DEFAULT_VISIBILITY),
     };
   }
 
@@ -271,6 +319,7 @@ export class PowerFlowBarCard extends HTMLElement {
       value_decimals: numberOr(incoming.value_decimals, DEFAULT_STYLE.value_decimals),
       background_transparent: boolOr(incoming.background_transparent, false),
       icons: normalizeIcons(incoming.icons),
+      hysteresis: normalizeVisibilityConfig(incoming.hysteresis),
       palette: {
         ...DEFAULT_PALETTE,
         ...(incoming.palette || {}),
@@ -280,6 +329,8 @@ export class PowerFlowBarCard extends HTMLElement {
 
     this._lastSignature = "";
     this._valueTweenState = createValueTweenState();
+    this._segmentVisibility = createSegmentVisibilityState();
+    clearSegmentHideTimers(this._segmentHideTimers);
 
     if (!this._rendered) {
       this._renderStatic();
@@ -337,15 +388,16 @@ export class PowerFlowBarCard extends HTMLElement {
 
   _computeAndApplyModel() {
     try {
-      this._model = computeBalanceModel(this._config, this._hass);
+      this._model = computeBalanceModel(this._config, this._hass, this._segmentVisibility);
     } catch (error) {
-      this._model = computeBalanceModel(this._config, null);
+      this._model = computeBalanceModel(this._config, null, this._segmentVisibility);
       console.warn("powerflow-bar: invalid sensor setup", error);
     }
 
     this._applyBlockVisuals(this._model.blocks, this._model.order, this._model.visible_keys);
     this._applySegmentLayout(this._model.order, this._model.visible_keys);
     this._animator.setTargets(this._model.widths);
+    syncSegmentVisibilityState(this._segmentVisibility, this._model.visible_keys);
   }
 
   _applyTheme() {
@@ -387,7 +439,13 @@ export class PowerFlowBarCard extends HTMLElement {
         nextKey ? colorByKey[nextKey].main : null,
       );
 
-      segment.main.style.background = mainGradient;
+      setSegmentBackground(segment, mainGradient);
+      if (key === "battery" && isBatteryDirectionChange(segment.main?.dataset?.batteryState, block.state)) {
+        pulseBatteryIcon(segment.icon);
+      }
+      if (segment.main) {
+        segment.main.dataset.batteryState = key === "battery" ? block.state || "" : "";
+      }
       segment.icon.setAttribute("icon", block.icon);
       segment.valueButton.dataset.entityId = block.entity_id || "";
       segment.valueButton.style.cursor = block.entity_id ? "pointer" : "default";
@@ -438,8 +496,8 @@ export class PowerFlowBarCard extends HTMLElement {
         const visible = visibleSet.has(key);
         const idx = Number.isFinite(orderIndex[key]) ? orderIndex[key] : 99;
 
-        segment.main.style.display = visible ? "" : "none";
         segment.main.style.order = String(idx);
+        setSegmentVisibility(segment.main, visible, this._segmentHideTimers);
       }
     });
   }
@@ -635,6 +693,7 @@ class PowerFlowBarEditor extends HTMLElement {
     this._numberSelectors = {};
     this._iconSelectors = {};
     this._booleanSelectors = {};
+    this._visibilitySelectors = {};
     this._entityCards = {};
     this._inlineErrors = {};
     this._onFormChange = (event) => this._handleFormChange(event);
@@ -686,6 +745,10 @@ class PowerFlowBarEditor extends HTMLElement {
           ...stub.palette,
           ...(incoming.palette || {}),
         },
+        hysteresis: {
+          ...stub.hysteresis,
+          ...(incoming.hysteresis || {}),
+        },
       };
       this._config = normalizeEditorConfig(seeded);
     } else {
@@ -723,6 +786,7 @@ class PowerFlowBarEditor extends HTMLElement {
       this._buildNumberSelectors();
       this._buildIconSelectors();
       this._buildBooleanSelectors();
+      this._buildVisibilitySelectors();
       this._collectEditorRefs();
       this._rendered = true;
     }
@@ -824,6 +888,38 @@ class PowerFlowBarEditor extends HTMLElement {
     }
   }
 
+  _buildVisibilitySelectors() {
+    if (!this.shadowRoot) {
+      return;
+    }
+    for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
+      if (!section.visibilityKey) {
+        continue;
+      }
+      for (const field of VISIBILITY_THRESHOLD_FIELDS) {
+        const path = `hysteresis.${section.visibilityKey}.${field.leaf}`;
+        const slot = this.shadowRoot.querySelector(`[data-visibility-slot="${path}"]`);
+        if (!slot || this._visibilitySelectors[path]) {
+          continue;
+        }
+        const selector = document.createElement("ha-selector");
+        selector.dataset.visibilityPath = path;
+        selector.configPath = path;
+        selector.selector = {
+          number: {
+            min: field.min,
+            max: field.max,
+            step: field.step,
+            mode: "box",
+          },
+        };
+        selector.value = DEFAULT_VISIBILITY[section.visibilityKey][field.leaf];
+        slot.appendChild(selector);
+        this._visibilitySelectors[path] = selector;
+      }
+    }
+  }
+
   _syncEntityPickerHass() {
     for (const picker of Object.values(this._entityPickers)) {
       picker.hass = this._hass;
@@ -835,6 +931,9 @@ class PowerFlowBarEditor extends HTMLElement {
       selector.hass = this._hass;
     }
     for (const selector of Object.values(this._booleanSelectors)) {
+      selector.hass = this._hass;
+    }
+    for (const selector of Object.values(this._visibilitySelectors)) {
       selector.hass = this._hass;
     }
   }
@@ -876,6 +975,16 @@ class PowerFlowBarEditor extends HTMLElement {
       const selector = this._booleanSelectors[field.key];
       if (selector) {
         selector.value = Boolean(cfg[field.key]);
+      }
+    }
+
+    for (const segmentKey of VISIBILITY_SEGMENT_KEYS) {
+      for (const field of VISIBILITY_THRESHOLD_FIELDS) {
+        const path = `hysteresis.${segmentKey}.${field.leaf}`;
+        const selector = this._visibilitySelectors[path];
+        if (selector) {
+          selector.value = cfg.hysteresis?.[segmentKey]?.[field.leaf] ?? DEFAULT_VISIBILITY[segmentKey][field.leaf];
+        }
       }
     }
 
@@ -934,6 +1043,13 @@ class PowerFlowBarEditor extends HTMLElement {
     if (EDITOR_NUMBER_FIELD_BY_KEY[path]) {
       const field = EDITOR_NUMBER_FIELD_BY_KEY[path];
       const numeric = parseNumberRange(value, DEFAULT_STYLE[path], field.min, field.max, field.integer === true);
+      this._updateConfigPath(path, numeric);
+      return;
+    }
+
+    if (VISIBILITY_FIELD_BY_PATH[path]) {
+      const field = VISIBILITY_FIELD_BY_PATH[path];
+      const numeric = parseNumberRange(value, 0, field.min, field.max, false);
       this._updateConfigPath(path, numeric);
       return;
     }
@@ -1238,7 +1354,7 @@ function buildEditorMarkup() {
       </details>
       <section class="section">
         <h3>Main Entities</h3>
-        <p class="section-note">Each block has its own entity picker, icon and color.</p>
+        <p class="section-note">Each block has its own entity picker, icon and color. Hysteresis is configured per rendered segment.</p>
         <div id="entity-validation" class="validation" hidden></div>
         <div class="entity-grid">
           ${MAIN_ENTITY_EDITOR_SECTIONS.map((section) => buildEntitySectionCard(section)).join("")}
@@ -1286,6 +1402,9 @@ function buildEntitySectionCard(section) {
   const colorField = section.colorKey
     ? buildColorField(`palette.${section.colorKey}`, "Color")
     : "";
+  const visibilityFields = section.visibilityKey
+    ? buildVisibilityFieldGroup(section.visibilityKey, section.visibilityTitle || "Segment visibility")
+    : "";
   const hint = section.hint ? `<p class="entity-hint">${section.hint}</p>` : "";
   return `
     <details class="entity-card" data-entity-card="${section.entityKey}">
@@ -1302,9 +1421,32 @@ function buildEntitySectionCard(section) {
         </div>
         ${iconField}
         ${colorField}
+        ${visibilityFields}
         <p class="entity-inline-error" data-inline-error="${section.entityKey}"></p>
       </div>
     </details>
+  `;
+}
+
+function buildVisibilityFieldGroup(segmentKey, title) {
+  return `
+    <div class="field">
+      <div class="field-meta">
+        <span class="field-label-strong">${title}</span>
+        <p class="field-help">Show uses the upper threshold. Hide uses the lower threshold. Defaults \`0 / 0\` mean visible above \`0 W\`.</p>
+      </div>
+      <div class="selector-grid">
+        ${VISIBILITY_THRESHOLD_FIELDS.map((field) => `
+          <div class="field">
+            <div class="field-meta">
+              <span class="field-label">${field.label}</span>
+              <p class="field-help">${field.help}</p>
+            </div>
+            <div class="selector-slot" data-visibility-slot="hysteresis.${segmentKey}.${field.leaf}"></div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
   `;
 }
 
@@ -1366,6 +1508,7 @@ function normalizeEditorConfig(config) {
     entities: { ...(source.entities || {}) },
     icons: { ...(source.icons || {}) },
     palette: { ...(source.palette || {}) },
+    hysteresis: normalizeVisibilityConfig(source.hysteresis),
   };
 }
 
@@ -1383,27 +1526,57 @@ function setPathValue(config, path, value) {
     return;
   }
 
-  const root = parts[0];
-  const leaf = parts[1];
-  if (!config[root] || typeof config[root] !== "object") {
-    config[root] = {};
+  let target = config;
+  for (let i = 0; i < (parts.length - 1); i += 1) {
+    const key = parts[i];
+    if (!target[key] || typeof target[key] !== "object") {
+      target[key] = {};
+    }
+    target = target[key];
   }
 
+  const leaf = parts[parts.length - 1];
   if (value === undefined) {
-    delete config[root][leaf];
+    delete target[leaf];
   } else {
-    config[root][leaf] = value;
+    target[leaf] = value;
   }
 
-  if (Object.keys(config[root]).length === 0) {
-    delete config[root];
+  pruneEmptyPath(config, parts);
+}
+
+function pruneEmptyPath(config, parts) {
+  for (let i = parts.length - 1; i > 0; i -= 1) {
+    const parentPath = parts.slice(0, i);
+    const parent = getPathValue(config, parentPath);
+    if (!parent || typeof parent !== "object" || Object.keys(parent).length > 0) {
+      continue;
+    }
+
+    const container = i === 1 ? config : getPathValue(config, parts.slice(0, i - 1));
+    if (container && typeof container === "object") {
+      delete container[parts[i - 1]];
+    }
   }
+}
+
+function getPathValue(config, parts) {
+  let value = config;
+  for (const part of parts) {
+    if (!value || typeof value !== "object") {
+      return undefined;
+    }
+    value = value[part];
+  }
+  return value;
 }
 
 function buildSegmentShells() {
   return SEGMENT_ORDER.map((key) => {
     return `
       <div class="segment" data-segment="${key}">
+        <div class="segment-bg segment-bg--current"></div>
+        <div class="segment-bg segment-bg--fade"></div>
         <div class="primary">
           <div class="icon-wrap">
             <ha-icon></ha-icon>
@@ -1424,6 +1597,8 @@ function buildSegmentRefs(root) {
     const main = root.querySelector(`#hem-main .segment[data-segment="${key}"]`);
     refs[key] = {
       main,
+      backgroundCurrent: main.querySelector(".segment-bg--current"),
+      backgroundFade: main.querySelector(".segment-bg--fade"),
       valueButton: main.querySelector(".value-button"),
       icon: main.querySelector(".icon-wrap ha-icon"),
       value: main.querySelector(".value"),
@@ -1443,6 +1618,132 @@ function normalizePalette(palette) {
     battery_output: palette?.battery_output || DEFAULT_PALETTE.battery_output,
     home_consumption: palette?.home_consumption || DEFAULT_PALETTE.home_consumption,
   };
+}
+
+function normalizeVisibilityConfig(visibility) {
+  const source = visibility && typeof visibility === "object" ? visibility : {};
+  const normalized = {};
+
+  for (const segmentKey of VISIBILITY_SEGMENT_KEYS) {
+    const defaults = DEFAULT_VISIBILITY[segmentKey];
+    const raw = source[segmentKey] && typeof source[segmentKey] === "object" ? source[segmentKey] : {};
+    const showThreshold = clamp(0, Number(raw.show_threshold) || 0, 5000);
+    const hideThreshold = clamp(0, Number(raw.hide_threshold) || 0, 5000);
+
+    normalized[segmentKey] = {
+      show_threshold: showThreshold,
+      hide_threshold: Math.min(hideThreshold, showThreshold),
+    };
+  }
+
+  return normalized;
+}
+
+function cloneVisibilityConfig(visibility) {
+  return JSON.parse(JSON.stringify(visibility));
+}
+
+function isBatteryDirectionChange(previousState, nextState) {
+  return (
+    (previousState === "CHARGING" && nextState === "DISCHARGING")
+    || (previousState === "DISCHARGING" && nextState === "CHARGING")
+  );
+}
+
+function pulseBatteryIcon(icon) {
+  if (!icon?.animate) {
+    return;
+  }
+  icon.getAnimations().forEach((animation) => animation.cancel());
+  icon.animate(
+    [
+      { transform: "scale(1)", opacity: 1 },
+      { transform: "scale(1.08)", opacity: 0.9, offset: 0.45 },
+      { transform: "scale(1)", opacity: 1 },
+    ],
+    {
+      duration: ICON_PULSE_DURATION_MS,
+      easing: COLOR_FADE_EASING,
+      fill: "none",
+    },
+  );
+}
+
+function setSegmentBackground(segment, nextBackground) {
+  const currentLayer = segment?.backgroundCurrent;
+  const fadeLayer = segment?.backgroundFade;
+  if (!currentLayer || !fadeLayer) {
+    if (segment?.main) {
+      segment.main.style.background = nextBackground;
+    }
+    return;
+  }
+
+  const previousBackground = currentLayer.style.background;
+  if (previousBackground === nextBackground) {
+    return;
+  }
+
+  if (!previousBackground) {
+    currentLayer.style.background = nextBackground;
+    fadeLayer.style.opacity = "0";
+    fadeLayer.style.background = "";
+    return;
+  }
+
+  fadeLayer.getAnimations().forEach((animation) => animation.cancel());
+  fadeLayer.style.background = previousBackground;
+  fadeLayer.style.opacity = "1";
+  currentLayer.style.background = nextBackground;
+  fadeLayer.animate(
+    [{ opacity: 1 }, { opacity: 0 }],
+    {
+      duration: COLOR_FADE_DURATION_MS,
+      easing: COLOR_FADE_EASING,
+      fill: "forwards",
+    },
+  );
+}
+
+function setSegmentVisibility(node, visible, timers) {
+  if (!node) {
+    return;
+  }
+
+  clearSegmentHideTimer(node.dataset.segment, timers);
+  if (visible) {
+    const needsEnter = node.style.display === "none";
+    node.style.display = "";
+    node.classList.remove("segment-hidden");
+    node.setAttribute("aria-hidden", "false");
+
+    if (needsEnter) {
+      node.classList.add("segment-entering");
+      requestAnimationFrame(() => {
+        node.classList.remove("segment-entering");
+      });
+    }
+    return;
+  }
+
+  node.classList.add("segment-hidden");
+  node.setAttribute("aria-hidden", "true");
+  const segmentKey = node.dataset.segment;
+  timers[segmentKey] = window.setTimeout(() => {
+    if (node.classList.contains("segment-hidden")) {
+      node.style.display = "none";
+    }
+    delete timers[segmentKey];
+  }, VISIBILITY_TRANSITION_MS);
+}
+
+function clearSegmentHideTimer(segmentKey, timers) {
+  const timer = timers?.[segmentKey];
+  if (!timer) {
+    return;
+  }
+  window.clearTimeout(timer);
+  delete timers[segmentKey];
 }
 
 function formatEntityStateValue(rawValue, unit, decimals) {
@@ -1605,6 +1906,16 @@ function createValueTweenState() {
   };
 }
 
+function createSegmentVisibilityState() {
+  return {
+    pv: { visible: false },
+    battery: { visible: false },
+    battery_output: { visible: false },
+    home: { visible: true },
+    grid: { visible: false },
+  };
+}
+
 function createValueTweenEntry() {
   return {
     from: 0,
@@ -1640,6 +1951,23 @@ function emitConfigChanged(target, config) {
     bubbles: true,
     composed: true,
   }));
+}
+
+function syncSegmentVisibilityState(state, visibleKeys) {
+  const visibleSet = new Set(visibleKeys || []);
+  for (const key of SEGMENT_ORDER) {
+    if (!state[key]) {
+      state[key] = { visible: false };
+    }
+    state[key].visible = visibleSet.has(key);
+  }
+}
+
+function clearSegmentHideTimers(timers) {
+  for (const [key, timer] of Object.entries(timers || {})) {
+    window.clearTimeout(timer);
+    delete timers[key];
+  }
 }
 
 function normalizeIcons(value) {
@@ -1702,6 +2030,7 @@ function styles() {
       }
 
       .main .segment {
+        position: relative;
         min-width: 0;
         border-radius: 0;
         display: flex;
@@ -1714,9 +2043,33 @@ function styles() {
         line-height: 1;
         white-space: nowrap;
         overflow: hidden;
+        opacity: 1;
+        transition: opacity ${VISIBILITY_TRANSITION_MS}ms ${COLOR_FADE_EASING};
+      }
+
+      .main .segment.segment-entering,
+      .main .segment.segment-hidden {
+        opacity: 0;
+      }
+
+      .main .segment .segment-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .main .segment .segment-bg--current {
+        z-index: 0;
+      }
+
+      .main .segment .segment-bg--fade {
+        z-index: 1;
+        opacity: 0;
       }
 
       .main .segment .primary {
+        position: relative;
+        z-index: 2;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1725,6 +2078,13 @@ function styles() {
         height: var(--hem-bar-height);
         width: 100%;
         flex: 0 0 auto;
+        transition: transform ${VISIBILITY_TRANSITION_MS}ms ${COLOR_FADE_EASING}, opacity ${VISIBILITY_TRANSITION_MS}ms ${COLOR_FADE_EASING};
+      }
+
+      .main .segment.segment-entering .primary,
+      .main .segment.segment-hidden .primary {
+        transform: translateY(2px) scale(0.985);
+        opacity: 0.94;
       }
 
       .main .segment .icon-wrap {

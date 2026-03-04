@@ -10,9 +10,11 @@ PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flo
 ## Features
 
 - Single-row segmented layout: `PV | Battery | Battery Output | Home | Grid`
-- Dynamic visibility: inactive PV/Battery/Battery Output/Grid segments hide at `0 W`
+- Dynamic visibility: PV/Battery/Battery Output/Grid segments hide based on their configured thresholds
+- Optional per-segment hysteresis for PV, Battery, Battery Output, and Grid visibility
 - Grid direction awareness: import/export state with dedicated icons and colors
 - Smooth spring animation for width transitions
+- Soft reveal/hide transition when segments appear or disappear
 - Value tweening to reduce flicker
 - Click on segment value to open Home Assistant `more-info`
 - Optional home suffix via `entities.home_coverage` (for example `230 W (72 %)`)
@@ -102,6 +104,19 @@ spring_damping: 22
 value_tween_ms: 180
 value_decimals: 0
 background_transparent: false
+hysteresis:
+  pv:
+    show_threshold: 0
+    hide_threshold: 0
+  battery:
+    show_threshold: 0
+    hide_threshold: 0
+  battery_output:
+    show_threshold: 0
+    hide_threshold: 0
+  grid:
+    show_threshold: 0
+    hide_threshold: 0
 palette:
   pv: "#E6C86E"
   battery_charge: "#4CAF8E"
@@ -148,6 +163,7 @@ entities:
 | `value_tween_ms`   | number  | `180`    | Range: `150..250`              |
 | `value_decimals`   | integer | `0`      | Range: `0..2`                  |
 | `background_transparent` | boolean | `false` | If `true`, card background is transparent |
+| `hysteresis`       | object  | optional | Per-segment hysteresis for `pv`, `battery`, `battery_output`, and `grid` |
 | `palette`          | object  | optional | Segment and card colors        |
 | `icons`            | object  | optional | Icon overrides                 |
 | `entities`         | object  | required | Sensor mapping                 |
@@ -181,6 +197,15 @@ Battery/system requirement:
 ### Icon keys
 
 `pv`, `battery_charge`, `battery_discharge`, `battery_output`, `home_consumption`, `grid_import`, `grid_export`
+
+### Visibility keys
+
+- `hysteresis.pv.show_threshold` / `hysteresis.pv.hide_threshold`
+- `hysteresis.battery.show_threshold` / `hysteresis.battery.hide_threshold`
+- `hysteresis.battery_output.show_threshold` / `hysteresis.battery_output.hide_threshold`
+- `hysteresis.grid.show_threshold` / `hysteresis.grid.hide_threshold`
+
+Defaults are `0 / 0`, which means a segment becomes visible when its value is above `0 W`. The battery hysteresis applies to the shared Battery segment that represents charge or discharge activity.
 
 ## Notes
 

@@ -1,4 +1,4 @@
-import { CARD_TYPE } from "./constants.js";
+import { CARD_TYPE, DEFAULT_VISIBILITY, VISIBILITY_SEGMENT_KEYS } from "./constants.js";
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -21,6 +21,7 @@ export function validateConfig(config) {
   validateIntegerRange(config.value_decimals, "value_decimals", 0, 2);
   validateBoolean(config.background_transparent, "background_transparent");
   validateIcons(config.icons);
+  validateVisibility(config.hysteresis);
 
   if (config.palette !== undefined) {
     if (!config.palette || typeof config.palette !== "object") {
@@ -155,4 +156,44 @@ function validateIcons(icons) {
       throw new Error(`icons.${key} must be an icon name string.`);
     }
   }
+}
+
+function validateVisibility(hysteresis) {
+  if (hysteresis === undefined) {
+    return;
+  }
+  if (!hysteresis || typeof hysteresis !== "object") {
+    throw new Error("hysteresis must be an object.");
+  }
+
+  for (const [segmentKey, value] of Object.entries(hysteresis)) {
+    if (!VISIBILITY_SEGMENT_KEYS.includes(segmentKey)) {
+      throw new Error(`Unsupported hysteresis key: ${segmentKey}`);
+    }
+    if (!value || typeof value !== "object") {
+      throw new Error(`hysteresis.${segmentKey} must be an object.`);
+    }
+
+    const allowed = ["show_threshold", "hide_threshold"];
+    for (const [subKey, subValue] of Object.entries(value)) {
+      if (!allowed.includes(subKey)) {
+        throw new Error(`Unsupported hysteresis.${segmentKey} key: ${subKey}`);
+      }
+      const n = Number(subValue);
+      if (!Number.isFinite(n) || n < 0) {
+        throw new Error(`hysteresis.${segmentKey}.${subKey} must be a non-negative number.`);
+      }
+    }
+
+    const showThreshold = numberOrFallback(value.show_threshold, DEFAULT_VISIBILITY[segmentKey].show_threshold);
+    const hideThreshold = numberOrFallback(value.hide_threshold, DEFAULT_VISIBILITY[segmentKey].hide_threshold);
+    if (hideThreshold > showThreshold) {
+      throw new Error(`hysteresis.${segmentKey}.hide_threshold must be less than or equal to hysteresis.${segmentKey}.show_threshold.`);
+    }
+  }
+}
+
+function numberOrFallback(value, fallback) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
