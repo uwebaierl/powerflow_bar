@@ -2,8 +2,8 @@
 
 ## Screenshots
 
-<img width="100%" height="auto" alt="PowerFlow Bar Overview" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_01.png" />
-<img width="100%" height="auto" alt="PowerFlow Bar Editor" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_02.png" />
+<img style="max-width: 1000px; width: 100%; height: auto;" alt="PowerFlow Bar Overview" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_01.png" />
+<img style="max-width: 1000px; width: 100%; height: auto;" alt="PowerFlow Bar Editor" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_02.png" />
 
 PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flow in a single animated segmented bar.
 
@@ -28,7 +28,7 @@ PowerFlow Bar is a custom Home Assistant Lovelace card that shows live power flo
 
 PowerFlow Bar is designed to pair well with [Battery Bar](https://github.com/uwebaierl/battery_bar) when you want a compact energy flow row plus a dedicated battery summary.
 
-<img width="100%" height="auto" alt="PowerFlow Bar and Battery Bar combined" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_combined_01.png" />
+<img style="max-width: 1000px; width: 100%; height: auto;" alt="PowerFlow Bar and Battery Bar combined" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_combined_01.png" />
 
 If you want per-battery SoC, voltage, and temperature details below the flow bar, see the [Battery Bar repository](https://github.com/uwebaierl/battery_bar).
 
