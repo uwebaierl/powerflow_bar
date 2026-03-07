@@ -1,0 +1,12 @@
+<type>(powerflow_bar): <summary>
+
+Why:
+- 
+
+What:
+- 
+
+Checks:
+- [ ] build
+- [ ] check:syntax
+- [ ] changelog updated
