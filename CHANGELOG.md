@@ -7,7 +7,8 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 ## [Unreleased]
 
 ### Changed
-- No unreleased changes.
+- Updated README combined setup section to link both companion cards (Battery Bar + House Energy Bar).
+- Replaced `powerflow_bar_combined_01.png` with the newer combined screenshot used by House Energy Bar.
 
 ## [1.1.0] - 2026-03-04
 
