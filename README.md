@@ -110,12 +110,12 @@ type: custom:powerflow-bar
 bar_height: 56
 corner_radius: 28
 row_gap: 0
-track_blend: 0.20
-spring_stiffness: 100
+track_blend: 0.15
+spring_stiffness: 230
 spring_damping: 22
 value_tween_ms: 180
 value_decimals: 0
-background_transparent: false
+background_transparent: true
 hysteresis:
   pv:
     show_threshold: 0
@@ -137,7 +137,7 @@ palette:
   home_consumption: "#9FA8B2"
   grid_import: "#C99A6A"
   grid_export: "#8C6BB3"
-  background: "#F4F4F4"
+  background: "#000000"
   track: "#EAECEF"
   text: "#2E2E2E"
 icons:
@@ -169,12 +169,12 @@ entities:
 | `bar_height`       | number  | `56`     | Range: `24..72`                |
 | `corner_radius`    | number  | `28`     | Range: `0..30`                 |
 | `row_gap`          | number  | `0`      | Range: `0..4`                  |
-| `track_blend`      | number  | `0.20`   | Range: `0.15..0.30`            |
+| `track_blend`      | number  | `0.15`   | Range: `0.15..0.30`            |
 | `spring_stiffness` | number  | `230`    | Range: `80..420`               |
 | `spring_damping`   | number  | `22`     | Range: `10..60`                |
 | `value_tween_ms`   | number  | `180`    | Range: `150..250`              |
 | `value_decimals`   | integer | `0`      | Range: `0..2`                  |
-| `background_transparent` | boolean | `false` | If `true`, card background is transparent |
+| `background_transparent` | boolean | `true` | If `true`, card background is transparent |
 | `hysteresis`       | object  | optional | Per-segment hysteresis for `pv`, `battery`, `battery_output`, and `grid` |
 | `palette`          | object  | optional | Segment and card colors        |
 | `icons`            | object  | optional | Icon overrides                 |

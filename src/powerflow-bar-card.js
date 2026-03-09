@@ -18,7 +18,7 @@ const DEFAULT_STYLE = {
   bar_height: 56,
   corner_radius: 28,
   row_gap: 0,
-  track_blend: 0.2,
+  track_blend: 0.15,
   spring_stiffness: 230,
   spring_damping: 22,
   value_tween_ms: 180,
@@ -26,7 +26,7 @@ const DEFAULT_STYLE = {
 };
 
 const DEFAULT_PALETTE = {
-  background: "#F4F4F4",
+  background: "#000000",
   track: "#EAECEF",
   text: "#2E2E2E",
   pv: "#E6C86E",
@@ -265,7 +265,7 @@ export class PowerFlowBarCard extends HTMLElement {
   static getStubConfig() {
     return {
       type: CARD_TYPE,
-      background_transparent: false,
+      background_transparent: true,
       entities: {
         pv: "sensor.pv_power",
         battery_charge: "sensor.battery_charge_power",
@@ -318,7 +318,7 @@ export class PowerFlowBarCard extends HTMLElement {
       spring_damping: numberOr(incoming.spring_damping, DEFAULT_STYLE.spring_damping),
       value_tween_ms: numberOr(incoming.value_tween_ms, DEFAULT_STYLE.value_tween_ms),
       value_decimals: numberOr(incoming.value_decimals, DEFAULT_STYLE.value_decimals),
-      background_transparent: boolOr(incoming.background_transparent, false),
+      background_transparent: boolOr(incoming.background_transparent, true),
       icons: normalizeIcons(incoming.icons),
       hysteresis: normalizeVisibilityConfig(incoming.hysteresis),
       palette: {
@@ -2013,7 +2013,7 @@ function styles() {
         --hem-bar-height: 56px;
         --hem-radius: 28px;
         --hem-gap: 0px;
-        --hem-card-bg: #f4f4f4;
+        --hem-card-bg: #000000;
         --hem-track: #eaecef;
         --hem-text: #2e2e2e;
       }
