@@ -1,7 +1,5 @@
 # PowerFlow Bar
 
-## Screenshots
-
 <img style="max-width: 1000px; width: 100%; height: auto;" alt="PowerFlow Bar Overview" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_01.png" />
 <img style="max-width: 1000px; width: 100%; height: auto;" alt="PowerFlow Bar Editor" src="https://raw.githubusercontent.com/uwebaierl/powerflow_bar/main/docs/images/powerflow_bar_02.png" />
 

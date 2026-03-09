@@ -10,6 +10,7 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 - Updated README combined setup section to link both companion cards (Battery Bar + House Energy Bar).
 - Replaced `powerflow_bar_combined_01.png` with the newer combined screenshot used by House Energy Bar.
 - Updated default config baseline in code/docs: `track_blend 0.15`, `background_transparent true`, `palette.background #000000`, and aligned example defaults.
+- Removed the `Screenshots` heading from README while keeping images in place.
 
 ## [1.1.0] - 2026-03-04
 
