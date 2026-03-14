@@ -7,6 +7,8 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 ## [Unreleased]
 
 ### Changed
+- Refactored the Lovelace editor to use Home Assistant's native `ha-form` rendering (removed custom editor CSS/markup).
+- Updated editor field labels to short, descriptive wording across layout, palette, entities, icons, and hysteresis.
 - Updated README combined setup section to link both companion cards (Battery Bar + House Energy Bar).
 - Replaced `powerflow_bar_combined_01.png` with the newer combined screenshot used by House Energy Bar.
 - Updated default config baseline in code/docs: `track_blend 0.15`, `background_transparent true`, `palette.background #000000`, and aligned example defaults.

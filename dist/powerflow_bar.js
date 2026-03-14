@@ -886,184 +886,10 @@ const COLOR_FADE_DURATION_MS = 260;
 const COLOR_FADE_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 const ICON_PULSE_DURATION_MS = 240;
 const VISIBILITY_TRANSITION_MS = 220;
-
-const EDITOR_NUMBER_FIELDS = [
-  { key: "bar_height", label: "Bar height", min: 24, max: 72, step: 1 },
-  { key: "corner_radius", label: "Corner radius", min: 0, max: 30, step: 1 },
-  { key: "row_gap", label: "Row gap", min: 0, max: 4, step: 0.1 },
-  { key: "track_blend", label: "Track blend", min: 0.15, max: 0.3, step: 0.01 },
-  { key: "spring_stiffness", label: "Spring stiffness", min: 80, max: 420, step: 1 },
-  { key: "spring_damping", label: "Spring damping", min: 10, max: 60, step: 1 },
-  { key: "value_tween_ms", label: "Value tween (ms)", min: 150, max: 250, step: 1 },
-  { key: "value_decimals", label: "Value decimals", min: 0, max: 2, step: 1, integer: true },
-];
-const EDITOR_NUMBER_FIELD_BY_KEY = Object.fromEntries(
-  EDITOR_NUMBER_FIELDS.map((field) => [field.key, field]),
-);
-
-const ENTITY_FIELD_ORDER = [
-  "pv",
-  "battery_charge",
-  "battery_discharge",
-  "battery_output",
-  "home_consumption",
-  "grid_import",
-  "grid_export",
-  "home_coverage",
-];
-
-const ICON_FIELD_ORDER = [
-  "pv",
-  "battery_charge",
-  "battery_discharge",
-  "battery_output",
-  "home_consumption",
-  "grid_import",
-  "grid_export",
-];
-
-const PALETTE_FIELD_ORDER = [
-  "pv",
-  "battery_charge",
-  "battery_discharge",
-  "battery_output",
-  "home_consumption",
-  "grid_import",
-  "grid_export",
-  "background",
-  "track",
-  "text",
-];
-const VISIBILITY_THRESHOLD_FIELDS = [
-  {
-    leaf: "show_threshold",
-    label: "Show above (W)",
-    min: 0,
-    max: 5000,
-    step: 1,
-    help: "Segment appears when its value rises above this threshold.",
-  },
-  {
-    leaf: "hide_threshold",
-    label: "Hide at or below (W)",
-    min: 0,
-    max: 5000,
-    step: 1,
-    help: "Segment stays visible until its value drops to this threshold or lower.",
-  },
-];
-
-const ENTITY_LABELS = {
-  pv: "PV",
-  battery_charge: "Battery charge",
-  battery_discharge: "Battery discharge",
-  battery_output: "Battery output",
-  home_consumption: "Home consumption",
-  grid_import: "Grid import",
-  grid_export: "Grid export",
-  home_coverage: "Home coverage (optional)",
-};
-
-const PALETTE_LABELS = {
-  pv: "PV",
-  battery_charge: "Battery charge",
-  battery_discharge: "Battery discharge",
-  battery_output: "Battery output",
-  home_consumption: "Home consumption",
-  grid_import: "Grid import",
-  grid_export: "Grid export",
-  background: "Background",
-  track: "Track",
-  text: "Text",
-};
-
-const VISIBILITY_FIELD_BY_PATH = Object.fromEntries(
-  VISIBILITY_SEGMENT_KEYS.flatMap((segmentKey) => VISIBILITY_THRESHOLD_FIELDS.map((field) => [
-    `hysteresis.${segmentKey}.${field.leaf}`,
-    field,
-  ])),
-);
-
-const MAIN_ENTITY_EDITOR_SECTIONS = [
-  {
-    id: "pv",
-    title: "PV",
-    visibilityKey: "pv",
-    visibilityTitle: "PV segment hysteresis",
-    fields: [
-      { entityKey: "pv", label: "PV", iconKey: "pv", colorKey: "pv" },
-    ],
-  },
-  {
-    id: "battery",
-    title: "Battery",
-    hint: "Configure Battery Output, or configure both Battery Charge and Battery Discharge.",
-    visibilityKey: "battery",
-    visibilityTitle: "Battery segment hysteresis",
-    fields: [
-      { entityKey: "battery_charge", label: "Charge", iconKey: "battery_charge", colorKey: "battery_charge" },
-      { entityKey: "battery_discharge", label: "Discharge", iconKey: "battery_discharge", colorKey: "battery_discharge" },
-    ],
-  },
-  {
-    id: "battery_output",
-    title: "Battery Output",
-    hint: "Recommended. Alternative: configure both Battery Charge and Battery Discharge.",
-    visibilityKey: "battery_output",
-    visibilityTitle: "Battery output segment hysteresis",
-    fields: [
-      { entityKey: "battery_output", label: "Battery Output", iconKey: "battery_output", colorKey: "battery_output" },
-    ],
-  },
-  {
-    id: "home_consumption",
-    title: "Home Consumption",
-    fields: [
-      { entityKey: "home_consumption", label: "Home Consumption", iconKey: "home_consumption", colorKey: "home_consumption" },
-    ],
-  },
-  {
-    id: "grid",
-    title: "Grid",
-    visibilityKey: "grid",
-    visibilityTitle: "Grid segment hysteresis",
-    fields: [
-      { entityKey: "grid_import", label: "Import", iconKey: "grid_import", colorKey: "grid_import" },
-      { entityKey: "grid_export", label: "Export", iconKey: "grid_export", colorKey: "grid_export" },
-    ],
-  },
-  {
-    id: "home_coverage",
-    title: "Home Coverage (optional)",
-    fields: [
-      { entityKey: "home_coverage", label: "Home Coverage" },
-    ],
-  },
-];
-const EDITOR_ENTITY_FIELDS = MAIN_ENTITY_EDITOR_SECTIONS.flatMap((section) => section.fields);
-
-const CARD_COLOR_KEYS = ["background", "track", "text"];
-const REQUIRED_ENTITY_KEYS = new Set(["pv", "home_consumption", "grid_import", "grid_export"]);
-const EDITOR_BOOLEAN_FIELDS = [
-  { key: "background_transparent", label: "Transparent background" },
-];
+const EDITOR_ELEMENT_TAG = "powerflow-bar-editor";
 const REORDER_MIN_DELTA_PX = 2;
 const REORDER_DURATION_MS = 280;
 const REORDER_EASING = "cubic-bezier(0.25, 0.8, 0.25, 1)";
-const EDITOR_FIELD_HELP = {
-  bar_height: "Card row height in px.",
-  corner_radius: "Corner radius of the row.",
-  row_gap: "Gap between visible main segments.",
-  track_blend: "Blend factor between track and segment colors.",
-  spring_stiffness: "Segment width animation stiffness.",
-  spring_damping: "Segment width animation damping.",
-  value_tween_ms: "Numeric value tween duration in milliseconds.",
-  value_decimals: "Decimal precision for all displayed numeric values.",
-  background_transparent: "Makes the card background transparent and ignores palette.background.",
-  background: "Card background color.",
-  track: "Track/base color behind segments.",
-  text: "Text and icon color.",
-};
 
 class PowerFlowBarCard extends HTMLElement {
   constructor() {
@@ -1130,10 +956,10 @@ class PowerFlowBarCard extends HTMLElement {
   }
 
   static async getConfigElement() {
-    if (!customElements.get("powerflow-bar-editor")) {
-      customElements.define("powerflow-bar-editor", PowerFlowBarEditor);
+    if (!customElements.get(EDITOR_ELEMENT_TAG)) {
+      customElements.define(EDITOR_ELEMENT_TAG, PowerFlowBarEditor);
     }
-    return document.createElement("powerflow-bar-editor");
+    return document.createElement(EDITOR_ELEMENT_TAG);
   }
 
   setConfig(config) {
@@ -1531,829 +1357,227 @@ class PowerFlowBarEditor extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._config = null;
     this._hass = null;
-    this._rendered = false;
-    this._refs = null;
-    this._entityPickers = {};
-    this._numberSelectors = {};
-    this._iconSelectors = {};
-    this._booleanSelectors = {};
-    this._entityCards = {};
-    this._inlineErrors = {};
-    this._onFormChange = (event) => this._handleFormChange(event);
-    this._onFormInput = (event) => this._handleFormInput(event);
+    this._form = null;
     this._onValueChanged = (event) => this._handleValueChangedEvent(event);
   }
 
   set hass(hass) {
     this._hass = hass;
-    this._syncEntityPickerHass();
+    if (this._form) {
+      this._form.hass = hass;
+    }
   }
 
   connectedCallback() {
     this._render();
-    if (this._config) {
-      this._syncFormFromConfig();
-      this._emitConfigAsync(this._config);
-    }
   }
 
   disconnectedCallback() {
-    const form = this._refs?.form;
-    if (form) {
-      form.removeEventListener("change", this._onFormChange);
-      form.removeEventListener("input", this._onFormInput);
-    }
-    if (this.shadowRoot) {
-      this.shadowRoot.removeEventListener("value-changed", this._onValueChanged);
+    if (this._form) {
+      this._form.removeEventListener("value-changed", this._onValueChanged);
     }
   }
 
   setConfig(config) {
     const incoming = config && typeof config === "object" ? config : {};
-    const stub = PowerFlowBarCard.getStubConfig();
-    if (!hasAnyEntityMapping(incoming.entities)) {
-      const seeded = {
-        ...stub,
-        ...incoming,
-        type: CARD_TYPE,
-        entities: {
-          ...stub.entities,
-          ...(incoming.entities || {}),
-        },
-        icons: {
-          ...stub.icons,
-          ...(incoming.icons || {}),
-        },
-        palette: {
-          ...stub.palette,
-          ...(incoming.palette || {}),
-        },
-        hysteresis: {
-          ...stub.hysteresis,
-          ...(incoming.hysteresis || {}),
-        },
-      };
-      this._config = normalizeEditorConfig(seeded);
-    } else {
-      this._config = normalizeEditorConfig({
-        ...incoming,
-        type: incoming.type || CARD_TYPE,
-      });
-    }
+    const seeded = seedEditorConfig(incoming);
+    this._config = normalizeEditorConfig({
+      ...seeded,
+      type: incoming.type || CARD_TYPE,
+    });
     this._render();
-    this._syncFormFromConfig();
-    this._emitConfigAsync(this._config);
-  }
-
-  _emitConfigAsync(config) {
-    if (!this.isConnected) {
-      return;
-    }
-    emitConfigChanged(this, config);
   }
 
   _render() {
     if (!this.shadowRoot) {
       return;
     }
-    if (!this._rendered) {
-      this.shadowRoot.innerHTML = buildEditorMarkup();
-      const form = this.shadowRoot.querySelector("form");
-      if (form) {
-        form.addEventListener("change", this._onFormChange);
-        form.addEventListener("input", this._onFormInput);
-      }
-      this.shadowRoot.addEventListener("value-changed", this._onValueChanged);
-      this._refs = { form };
-      this._buildEntityPickers();
-      this._buildNumberSelectors();
-      this._buildIconSelectors();
-      this._buildBooleanSelectors();
-      this._collectEditorRefs();
-      this._rendered = true;
-    }
-    this._syncEntityPickerHass();
-  }
 
-  _collectEditorRefs() {
-    this._entityCards = {};
-    this._inlineErrors = {};
-    for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      this._entityCards[section.id] = this.shadowRoot.querySelector(`[data-entity-card="${section.id}"]`);
-      for (const field of section.fields) {
-        this._inlineErrors[field.entityKey] = this.shadowRoot.querySelector(`[data-inline-error="${field.entityKey}"]`);
-      }
+    if (!this._form) {
+      this.shadowRoot.innerHTML = "<ha-form></ha-form>";
+      this._form = this.shadowRoot.querySelector("ha-form");
+      this._form?.addEventListener("value-changed", this._onValueChanged);
     }
-    this._refs.validation = this.shadowRoot.querySelector("#entity-validation");
-  }
 
-  _buildEntityPickers() {
-    if (!this.shadowRoot) {
+    if (!this._form) {
       return;
     }
-    for (const field of EDITOR_ENTITY_FIELDS) {
-      const key = field.entityKey;
-      const slot = this.shadowRoot.querySelector(`[data-entity-slot="${key}"]`);
-      if (!slot) {
-        continue;
-      }
-      const picker = document.createElement("ha-selector");
-      picker.dataset.entityKey = key;
-      picker.configPath = `entities.${key}`;
-      picker.selector = { entity: { domain: ["sensor", "input_number"] } };
-      picker.value = "";
-      slot.appendChild(picker);
-      this._entityPickers[key] = picker;
-    }
-  }
-
-  _buildNumberSelectors() {
-    if (!this.shadowRoot) {
-      return;
-    }
-    for (const field of EDITOR_NUMBER_FIELDS) {
-      const slot = this.shadowRoot.querySelector(`[data-number-slot="${field.key}"]`);
-      if (!slot) {
-        continue;
-      }
-      const selector = document.createElement("ha-selector");
-      selector.dataset.numberKey = field.key;
-      selector.configPath = field.key;
-      selector.selector = {
-        number: {
-          min: field.min,
-          max: field.max,
-          step: field.step,
-          mode: "slider",
-        },
-      };
-      selector.value = DEFAULT_STYLE[field.key];
-      slot.appendChild(selector);
-      this._numberSelectors[field.key] = selector;
-    }
-  }
-
-  _buildIconSelectors() {
-    if (!this.shadowRoot) {
-      return;
-    }
-    for (const key of ICON_FIELD_ORDER) {
-      const slot = this.shadowRoot.querySelector(`[data-icon-slot="${key}"]`);
-      if (!slot) {
-        continue;
-      }
-      const selector = document.createElement("ha-selector");
-      selector.dataset.iconKey = key;
-      selector.configPath = `icons.${key}`;
-      selector.selector = { icon: {} };
-      selector.value = DEFAULT_ICONS[key] || "";
-      slot.appendChild(selector);
-      this._iconSelectors[key] = selector;
-    }
-  }
-
-  _buildBooleanSelectors() {
-    if (!this.shadowRoot) {
-      return;
-    }
-    for (const field of EDITOR_BOOLEAN_FIELDS) {
-      const slot = this.shadowRoot.querySelector(`[data-boolean-slot="${field.key}"]`);
-      if (!slot) {
-        continue;
-      }
-      const selector = document.createElement("ha-selector");
-      selector.dataset.booleanKey = field.key;
-      selector.configPath = field.key;
-      selector.selector = { boolean: {} };
-      selector.value = false;
-      slot.appendChild(selector);
-      this._booleanSelectors[field.key] = selector;
-    }
-  }
-
-  _syncEntityPickerHass() {
-    for (const picker of Object.values(this._entityPickers)) {
-      picker.hass = this._hass;
-    }
-    for (const selector of Object.values(this._numberSelectors)) {
-      selector.hass = this._hass;
-    }
-    for (const selector of Object.values(this._iconSelectors)) {
-      selector.hass = this._hass;
-    }
-    for (const selector of Object.values(this._booleanSelectors)) {
-      selector.hass = this._hass;
-    }
-  }
-
-  _syncFormFromConfig() {
-    if (!this.shadowRoot || !this._config) {
-      return;
-    }
-    const stub = PowerFlowBarCard.getStubConfig();
-    const cfg = this._config;
-
-    for (const field of EDITOR_NUMBER_FIELDS) {
-      const raw = cfg[field.key];
-      const fallback = DEFAULT_STYLE[field.key];
-      const numeric = Number.isFinite(Number(raw)) ? Number(raw) : fallback;
-      const selector = this._numberSelectors[field.key];
-      if (selector) {
-        selector.value = numeric;
-      }
-    }
-
-    for (const key of ENTITY_FIELD_ORDER) {
-      const value = cfg.entities?.[key] ?? stub.entities[key] ?? "";
-      const picker = this._entityPickers[key];
-      if (picker) {
-        picker.value = String(value);
-      }
-    }
-
-    for (const key of ICON_FIELD_ORDER) {
-      const value = cfg.icons?.[key] ?? DEFAULT_ICONS[key] ?? "";
-      const selector = this._iconSelectors[key];
-      if (selector) {
-        selector.value = String(value);
-      }
-    }
-
-    for (const field of EDITOR_BOOLEAN_FIELDS) {
-      const selector = this._booleanSelectors[field.key];
-      if (selector) {
-        selector.value = Boolean(cfg[field.key]);
-      }
-    }
-
-    for (const segmentKey of VISIBILITY_SEGMENT_KEYS) {
-      for (const field of VISIBILITY_THRESHOLD_FIELDS) {
-        setInputValue(
-          this.shadowRoot,
-          `hysteresis.${segmentKey}.${field.leaf}`,
-          cfg.hysteresis?.[segmentKey]?.[field.leaf] ?? DEFAULT_VISIBILITY[segmentKey][field.leaf],
-        );
-      }
-    }
-
-    for (const key of PALETTE_FIELD_ORDER) {
-      const value = cfg.palette?.[key] ?? DEFAULT_PALETTE[key] ?? "#000000";
-      setInputValue(this.shadowRoot, `palette.${key}`, normalizeHexColor(value, DEFAULT_PALETTE[key] || "#000000"));
-    }
-    this._updateValidationUI(cfg);
-  }
-
-  _handleFormChange(event) {
-    if (!this.shadowRoot) {
-      return;
-    }
-    const target = event?.target;
-    if (!(target instanceof HTMLInputElement)) {
-      return;
-    }
-    if (target.name?.startsWith("palette.")) {
-      const paletteKey = target.name.replace("palette.", "");
-      const normalized = normalizeHexColor(target.value, DEFAULT_PALETTE[paletteKey] || "#000000");
-      target.value = normalized;
-      this._updateConfigPath(target.name, normalized);
-      return;
-    }
-    if (VISIBILITY_FIELD_BY_PATH[target.name]) {
-      const field = VISIBILITY_FIELD_BY_PATH[target.name];
-      const numeric = parseNumberRange(target.value, 0, field.min, field.max, false);
-      target.value = String(numeric);
-      this._updateConfigPath(target.name, numeric);
-    }
-  }
-
-  _handleFormInput(event) {
-    if (!this.shadowRoot) {
-      return;
-    }
-    const target = event?.target;
-    if (!(target instanceof HTMLInputElement)) {
-      return;
-    }
-    if (target.name?.startsWith("palette.")) {
-      const paletteKey = target.name.replace("palette.", "");
-      const normalized = normalizeHexColor(target.value, DEFAULT_PALETTE[paletteKey] || "#000000");
-      target.value = normalized;
-      this._updateConfigPath(target.name, normalized);
-      return;
-    }
-    if (VISIBILITY_FIELD_BY_PATH[target.name]) {
-      const field = VISIBILITY_FIELD_BY_PATH[target.name];
-      const numeric = parseNumberRange(target.value, 0, field.min, field.max, false);
-      this._updateConfigPath(target.name, numeric);
-    }
+    this._form.hass = this._hass;
+    this._form.schema = buildConfigFormSchema();
+    this._form.data = this._config || normalizeEditorConfig(seedEditorConfig({ type: CARD_TYPE }));
+    this._form.computeLabel = (schema) => schema.label || schema.name || "";
   }
 
   _handleValueChangedEvent(event) {
-    const pathNodes = typeof event?.composedPath === "function" ? event.composedPath() : [];
-    const source = pathNodes.find((node) => node && typeof node === "object" && node.configPath);
-    const path = source?.configPath;
-    if (!path) {
+    event.stopPropagation();
+    const value = event?.detail?.value;
+    if (!value || typeof value !== "object") {
       return;
     }
 
-    let value = event?.detail?.value;
-    if (value === undefined) {
-      value = source?.value;
-    }
-
-    if (EDITOR_NUMBER_FIELD_BY_KEY[path]) {
-      const field = EDITOR_NUMBER_FIELD_BY_KEY[path];
-      const numeric = parseNumberRange(value, DEFAULT_STYLE[path], field.min, field.max, field.integer === true);
-      this._updateConfigPath(path, numeric);
-      return;
-    }
-
-    if (VISIBILITY_FIELD_BY_PATH[path]) {
-      const field = VISIBILITY_FIELD_BY_PATH[path];
-      const numeric = parseNumberRange(value, 0, field.min, field.max, false);
-      this._updateConfigPath(path, numeric);
-      return;
-    }
-
-    const text = String(value ?? "").trim();
-    if (path.startsWith("entities.") || path.startsWith("icons.")) {
-      this._updateConfigPath(path, text.length > 0 ? text : undefined);
-      return;
-    }
-
-    this._updateConfigPath(path, value);
-  }
-
-  _updateConfigPath(path, value) {
-    const next = normalizeEditorConfig(this._config);
-    setPathValue(next, path, value);
+    const next = normalizeEditorConfig({
+      ...(this._config || {}),
+      ...value,
+      type: CARD_TYPE,
+    });
     this._config = next;
-    this._syncFormFromConfig();
-    this._updateValidationUI(next);
-    this._emitConfigAsync(next);
-  }
 
-  _updateValidationUI(config) {
-    const entities = config?.entities || {};
-    const fieldErrors = {};
-    const messages = [];
-
-    for (const key of REQUIRED_ENTITY_KEYS) {
-      if (!isEntityId(entities[key])) {
-        fieldErrors[key] = "Missing entity.";
-        messages.push(`${ENTITY_LABELS[key] || key}: set an entity.`);
-      }
+    if (this._form) {
+      this._form.data = next;
     }
 
-    const hasBatteryOutput = isEntityId(entities.battery_output);
-    const hasBatteryCharge = isEntityId(entities.battery_charge);
-    const hasBatteryDischarge = isEntityId(entities.battery_discharge);
-    const hasBatterySplit = hasBatteryCharge && hasBatteryDischarge;
-
-    if (!hasBatteryOutput && !hasBatterySplit) {
-      fieldErrors.battery_output = "Provide Battery Output or both Battery Charge and Battery Discharge.";
-      if (!hasBatteryCharge) {
-        fieldErrors.battery_charge = "Set together with Battery Discharge when Battery Output is empty.";
-      }
-      if (!hasBatteryDischarge) {
-        fieldErrors.battery_discharge = "Set together with Battery Charge when Battery Output is empty.";
-      }
-      messages.push("Battery setup: set Battery Output, or set both Battery Charge and Battery Discharge.");
-    }
-
-    for (const section of MAIN_ENTITY_EDITOR_SECTIONS) {
-      const card = this._entityCards[section.id];
-      const hasError = section.fields.some((field) => Boolean(fieldErrors[field.entityKey]));
-
-      if (card) {
-        card.classList.toggle("invalid", hasError);
-        if (hasError && "open" in card) {
-          card.open = true;
-        }
-      }
-      for (const field of section.fields) {
-        const inlineError = this._inlineErrors[field.entityKey];
-        if (inlineError) {
-          inlineError.textContent = fieldErrors[field.entityKey] || "";
-        }
-      }
-    }
-
-    const validation = this._refs?.validation;
-    if (!validation) {
-      return;
-    }
-    if (messages.length === 0) {
-      validation.hidden = true;
-      validation.textContent = "";
-      return;
-    }
-    validation.hidden = false;
-    validation.textContent = messages.join(" ");
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: next },
+      bubbles: true,
+      composed: true,
+    }));
   }
 }
 
-function buildEditorMarkup() {
-  return `
-    <style>
-      :host {
-        display: block;
-      }
+function buildConfigFormSchema() {
+  const entitySelector = { entity: { domain: ["sensor", "input_number"] } };
+  const iconSelector = { icon: {} };
+  const colorSelector = { text: {} };
 
-      .editor {
-        padding: 12px;
-        display: grid;
-        gap: 12px;
-      }
-
-      .section {
-        border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
-        border-radius: 10px;
-        padding: 12px;
-        display: grid;
-        gap: 10px;
-      }
-
-      .section h3 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      .section summary {
-        list-style: none;
-        cursor: pointer;
-      }
-
-      .section summary::-webkit-details-marker {
-        display: none;
-      }
-
-      .section-summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .section-summary::after {
-        content: "▾";
-        opacity: 0.7;
-        font-size: 12px;
-      }
-
-      details.section:not([open]) .section-summary::after {
-        content: "▸";
-      }
-
-      .section-content {
-        display: grid;
-        gap: 12px;
-        margin-top: 12px;
-      }
-
-      .section-note {
-        margin: 0;
-        font-size: 12px;
-        color: var(--secondary-text-color, #8f97a3);
-      }
-
-      .validation {
-        font-size: 12px;
-        line-height: 1.35;
-        color: var(--error-color, #db4437);
-        background: color-mix(in srgb, var(--error-color, #db4437) 12%, transparent);
-        border: 1px solid color-mix(in srgb, var(--error-color, #db4437) 35%, transparent);
-        border-radius: 8px;
-        padding: 8px 10px;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 10px 12px;
-      }
-
-      .entity-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 10px 12px;
-      }
-
-      .entity-card {
-        border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
-        border-radius: 10px;
-        padding: 0;
-        display: grid;
-        gap: 0;
-        overflow: hidden;
-      }
-
-      .entity-card > summary {
-        list-style: none;
-      }
-
-      .entity-card > summary::-webkit-details-marker {
-        display: none;
-      }
-
-      .entity-summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        padding: 10px;
-        cursor: pointer;
-        background: color-mix(in srgb, var(--primary-text-color, #fff) 4%, transparent);
-      }
-
-      .entity-summary::after {
-        content: "▾";
-        opacity: 0.7;
-        font-size: 12px;
-      }
-
-      .entity-card:not([open]) .entity-summary::after {
-        content: "▸";
-      }
-
-      .entity-content {
-        display: grid;
-        gap: 8px;
-        padding: 10px;
-      }
-
-      .entity-subsection {
-        display: grid;
-        gap: 8px;
-      }
-
-      .entity-subsection + .entity-subsection {
-        padding-top: 10px;
-        border-top: 1px solid color-mix(in srgb, var(--divider-color, rgba(127, 127, 127, 0.3)) 70%, transparent);
-      }
-
-      .entity-title {
-        margin: 0;
-        font-size: 13px;
-        font-weight: 600;
-      }
-
-      .entity-subtitle {
-        margin: 0;
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--primary-text-color, inherit);
-      }
-
-      .entity-hint {
-        margin: 0;
-        font-size: 12px;
-        color: var(--secondary-text-color, #8f97a3);
-      }
-
-      .entity-picker-slot {
-        min-height: 56px;
-      }
-
-      .entity-inline-error {
-        margin: 0;
-        min-height: 16px;
-        font-size: 12px;
-        color: var(--error-color, #db4437);
-      }
-
-      .entity-card.invalid {
-        border-color: color-mix(in srgb, var(--error-color, #db4437) 55%, transparent);
-      }
-
-      .field {
-        display: grid;
-        gap: 6px;
-        min-width: 0;
-      }
-
-      .field-meta {
-        display: grid;
-        gap: 2px;
-      }
-
-      .field-label {
-        font-size: 12px;
-        color: var(--secondary-text-color, #8f97a3);
-      }
-
-      .field-label-strong {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--primary-text-color, inherit);
-      }
-
-      .field input[type="color"] {
-        padding: 0;
-        min-height: 36px;
-        width: 100%;
-        box-sizing: border-box;
-        border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
-        border-radius: 8px;
-        background: transparent;
-      }
-
-      .field input[type="number"] {
-        min-height: 36px;
-        width: 100%;
-        box-sizing: border-box;
-        padding: 8px 10px;
-        border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
-        border-radius: 8px;
-        background: transparent;
-        color: var(--primary-text-color, inherit);
-        font: inherit;
-      }
-
-      .selector-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 10px 12px;
-      }
-
-      .selector-slot {
-        min-height: 56px;
-      }
-
-      .field-help {
-        margin: 0;
-        font-size: 12px;
-        color: var(--secondary-text-color, #8f97a3);
-      }
-
-    </style>
-    <form class="editor">
-      <details class="section">
-        <summary class="section-summary">
-          <h3>Layout & Motion</h3>
-        </summary>
-        <div class="section-content">
-          <div class="selector-grid">
-            ${EDITOR_NUMBER_FIELDS.map((field) => buildNumberSelectorSlot(field)).join("")}
-            ${EDITOR_BOOLEAN_FIELDS.map((field) => buildBooleanSelectorSlot(field)).join("")}
-          </div>
-          <div class="grid">
-            ${CARD_COLOR_KEYS.map((key) => buildColorField(`palette.${key}`, PALETTE_LABELS[key] || key, EDITOR_FIELD_HELP[key] || "")).join("")}
-          </div>
-        </div>
-      </details>
-      <section class="section">
-        <h3>Main Entities</h3>
-        <p class="section-note">Each rendered segment has its own entity mapping, icon, color, and optional hysteresis settings.</p>
-        <div id="entity-validation" class="validation" hidden></div>
-        <div class="entity-grid">
-          ${MAIN_ENTITY_EDITOR_SECTIONS.map((section) => buildEntitySectionCard(section)).join("")}
-        </div>
-      </section>
-    </form>
-  `;
+  return [
+    {
+      type: "expandable",
+      title: "Layout & Motion",
+      schema: [
+        { name: "bar_height", label: "Bar height (px)", required: true, selector: { number: { min: 24, max: 72, step: 1, mode: "slider" } } },
+        { name: "corner_radius", label: "Corner radius (px)", required: true, selector: { number: { min: 0, max: 30, step: 1, mode: "slider" } } },
+        { name: "row_gap", label: "Gap between visible segments (px)", required: true, selector: { number: { min: 0, max: 4, step: 0.1, mode: "slider" } } },
+        { name: "track_blend", label: "Track/segment color blend (0.15-0.30)", required: true, selector: { number: { min: 0.15, max: 0.3, step: 0.01, mode: "slider" } } },
+        { name: "spring_stiffness", label: "Width animation stiffness", required: true, selector: { number: { min: 80, max: 420, step: 1, mode: "slider" } } },
+        { name: "spring_damping", label: "Width animation damping", required: true, selector: { number: { min: 10, max: 60, step: 1, mode: "slider" } } },
+        { name: "value_tween_ms", label: "Value animation duration (ms)", required: true, selector: { number: { min: 150, max: 250, step: 1, mode: "slider" } } },
+        { name: "value_decimals", label: "Displayed value decimals", required: true, selector: { number: { min: 0, max: 2, step: 1, mode: "box" } } },
+        { name: "background_transparent", label: "Use transparent card background", selector: { boolean: {} } },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Palette",
+      name: "palette",
+      schema: [
+        { name: "pv", label: "PV segment color", required: true, selector: colorSelector },
+        { name: "battery_charge", label: "Battery charge segment color", required: true, selector: colorSelector },
+        { name: "battery_discharge", label: "Battery discharge segment color", required: true, selector: colorSelector },
+        { name: "battery_output", label: "Battery output segment color", required: true, selector: colorSelector },
+        { name: "home_consumption", label: "Home consumption segment color", required: true, selector: colorSelector },
+        { name: "grid_import", label: "Grid import segment color", required: true, selector: colorSelector },
+        { name: "grid_export", label: "Grid export segment color", required: true, selector: colorSelector },
+        { name: "background", label: "Card background color", required: true, selector: colorSelector },
+        { name: "track", label: "Base track color", required: true, selector: colorSelector },
+        { name: "text", label: "Text and icon color", required: true, selector: colorSelector },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Entities",
+      name: "entities",
+      schema: [
+        { name: "pv", label: "PV power entity", required: true, selector: entitySelector },
+        { name: "battery_charge", label: "Battery charge power entity", selector: entitySelector },
+        { name: "battery_discharge", label: "Battery discharge power entity", selector: entitySelector },
+        { name: "battery_output", label: "Battery output power entity", selector: entitySelector },
+        { name: "home_consumption", label: "Home consumption power entity", required: true, selector: entitySelector },
+        { name: "grid_import", label: "Grid import power entity", required: true, selector: entitySelector },
+        { name: "grid_export", label: "Grid export power entity", required: true, selector: entitySelector },
+        { name: "home_coverage", label: "Home coverage entity (optional)", selector: entitySelector },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Icons",
+      name: "icons",
+      schema: [
+        { name: "pv", label: "PV icon", selector: iconSelector },
+        { name: "battery_charge", label: "Battery charge icon", selector: iconSelector },
+        { name: "battery_discharge", label: "Battery discharge icon", selector: iconSelector },
+        { name: "battery_output", label: "Battery output icon", selector: iconSelector },
+        { name: "home_consumption", label: "Home consumption icon", selector: iconSelector },
+        { name: "grid_import", label: "Grid import icon", selector: iconSelector },
+        { name: "grid_export", label: "Grid export icon", selector: iconSelector },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Hysteresis",
+      name: "hysteresis",
+      schema: buildHysteresisSchema(),
+    },
+  ];
 }
 
-function buildNumberSelectorSlot(field) {
-  return `
-    <div class="field">
-      <div class="field-meta">
-        <span class="field-label-strong">${field.label}</span>
-        <p class="field-help">${EDITOR_FIELD_HELP[field.key] || ""}</p>
-      </div>
-      <div class="selector-slot" data-number-slot="${field.key}"></div>
-    </div>
-  `;
+function buildHysteresisSchema() {
+  return [
+    {
+      type: "expandable",
+      title: "PV",
+      name: "pv",
+      schema: [
+        { name: "show_threshold", label: "Show segment above (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+        { name: "hide_threshold", label: "Hide segment at or below (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Battery",
+      name: "battery",
+      schema: [
+        { name: "show_threshold", label: "Show segment above (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+        { name: "hide_threshold", label: "Hide segment at or below (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Battery output",
+      name: "battery_output",
+      schema: [
+        { name: "show_threshold", label: "Show segment above (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+        { name: "hide_threshold", label: "Hide segment at or below (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+      ],
+    },
+    {
+      type: "expandable",
+      title: "Grid",
+      name: "grid",
+      schema: [
+        { name: "show_threshold", label: "Show segment above (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+        { name: "hide_threshold", label: "Hide segment at or below (W)", required: true, selector: { number: { min: 0, max: 5000, step: 1, mode: "box" } } },
+      ],
+    },
+  ];
 }
 
-function buildBooleanSelectorSlot(field) {
-  return `
-    <div class="field">
-      <div class="field-meta">
-        <span class="field-label-strong">${field.label}</span>
-        <p class="field-help">${EDITOR_FIELD_HELP[field.key] || ""}</p>
-      </div>
-      <div class="selector-slot" data-boolean-slot="${field.key}"></div>
-    </div>
-  `;
-}
-
-function buildEntitySectionCard(section) {
-  const visibilityFields = section.visibilityKey
-    ? buildVisibilityFieldGroup(section.visibilityKey, section.visibilityTitle || "Segment visibility")
-    : "";
-  const hint = section.hint ? `<p class="entity-hint">${section.hint}</p>` : "";
-  return `
-    <details class="entity-card" data-entity-card="${section.id}">
-      <summary class="entity-summary">
-        <h4 class="entity-title">${section.title}</h4>
-      </summary>
-      <div class="entity-content">
-        ${hint}
-        ${section.fields.map((field) => buildEntityFieldBlock(field)).join("")}
-        ${visibilityFields}
-      </div>
-    </details>
-  `;
-}
-
-function buildEntityFieldBlock(field) {
-  const iconField = field.iconKey
-    ? `
-      <div class="field">
-        <div class="field-meta">
-          <span class="field-label-strong">Icon</span>
-        </div>
-        <div class="selector-slot" data-icon-slot="${field.iconKey}"></div>
-      </div>
-    `
-    : "";
-  const colorField = field.colorKey
-    ? buildColorField(`palette.${field.colorKey}`, "Color")
-    : "";
-
-  return `
-    <div class="entity-subsection">
-      <h5 class="entity-subtitle">${field.label}</h5>
-      <div class="field">
-        <div class="field-meta">
-          <span class="field-label-strong">Entity</span>
-        </div>
-        <div class="entity-picker-slot" data-entity-slot="${field.entityKey}"></div>
-      </div>
-      ${iconField}
-      ${colorField}
-      <p class="entity-inline-error" data-inline-error="${field.entityKey}"></p>
-    </div>
-  `;
-}
-
-function buildVisibilityFieldGroup(segmentKey, title) {
-  return `
-    <div class="field">
-      <div class="field-meta">
-        <span class="field-label-strong">${title}</span>
-      </div>
-      <div class="selector-grid">
-        ${VISIBILITY_THRESHOLD_FIELDS.map((field) => `
-          <div class="field">
-            <div class="field-meta">
-              <span class="field-label">${field.label}</span>
-              <p class="field-help">${field.help}</p>
-            </div>
-            <input
-              type="number"
-              name="hysteresis.${segmentKey}.${field.leaf}"
-              min="${field.min}"
-              max="${field.max}"
-              step="${field.step}"
-            />
-          </div>
-        `).join("")}
-      </div>
-    </div>
-  `;
-}
-
-function buildColorField(name, label, helpText = "") {
-  return `
-    <label class="field">
-      <div class="field-meta">
-        <span class="field-label-strong">${label}</span>
-        ${helpText ? `<p class="field-help">${helpText}</p>` : ""}
-      </div>
-      <input type="color" name="${name}" />
-    </label>
-  `;
-}
-
-function setInputValue(root, name, value) {
-  const input = root.querySelector(`input[name="${name}"]`);
-  if (!input) {
-    return;
+function seedEditorConfig(config) {
+  const source = config && typeof config === "object" ? config : {};
+  if (hasAnyEntityMapping(source.entities)) {
+    return source;
   }
-  input.value = String(value ?? "");
-}
 
-function parseNumberRange(raw, fallback, min, max, integer) {
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed)) {
-    return fallback;
-  }
-  const bounded = clamp(min, parsed, max);
-  if (integer) {
-    return Math.round(bounded);
-  }
-  return bounded;
-}
-
-function normalizeHexColor(value, fallback) {
-  const raw = String(value ?? "").trim();
-  if (/^#[0-9A-Fa-f]{6}$/.test(raw)) {
-    return raw.toUpperCase();
-  }
-  return String(fallback || "#000000").toUpperCase();
+  const stub = PowerFlowBarCard.getStubConfig();
+  return {
+    ...stub,
+    ...source,
+    entities: {
+      ...stub.entities,
+      ...(source.entities || {}),
+    },
+    icons: {
+      ...stub.icons,
+      ...(source.icons || {}),
+    },
+    palette: {
+      ...stub.palette,
+      ...(source.palette || {}),
+    },
+    hysteresis: {
+      ...stub.hysteresis,
+      ...(source.hysteresis || {}),
+    },
+  };
 }
 
 function stopNodeReorderAnimation(node) {
@@ -2371,70 +1595,26 @@ function normalizeEditorConfig(config) {
   return {
     ...rest,
     type: CARD_TYPE,
+    bar_height: numberOr(source.bar_height, DEFAULT_STYLE.bar_height),
+    corner_radius: numberOr(source.corner_radius, DEFAULT_STYLE.corner_radius),
+    row_gap: numberOr(source.row_gap, DEFAULT_STYLE.row_gap),
+    track_blend: numberOr(source.track_blend, DEFAULT_STYLE.track_blend),
+    spring_stiffness: numberOr(source.spring_stiffness, DEFAULT_STYLE.spring_stiffness),
+    spring_damping: numberOr(source.spring_damping, DEFAULT_STYLE.spring_damping),
+    value_tween_ms: numberOr(source.value_tween_ms, DEFAULT_STYLE.value_tween_ms),
+    value_decimals: numberOr(source.value_decimals, DEFAULT_STYLE.value_decimals),
+    background_transparent: boolOr(source.background_transparent, true),
     entities: { ...(source.entities || {}) },
-    icons: { ...(source.icons || {}) },
-    palette: { ...(source.palette || {}) },
+    icons: {
+      ...DEFAULT_ICONS,
+      ...normalizeIcons(source.icons),
+    },
+    palette: {
+      ...DEFAULT_PALETTE,
+      ...(source.palette || {}),
+    },
     hysteresis: normalizeVisibilityConfig(source.hysteresis),
   };
-}
-
-function setPathValue(config, path, value) {
-  if (!path || typeof path !== "string" || !config || typeof config !== "object") {
-    return;
-  }
-  const parts = path.split(".");
-  if (parts.length === 1) {
-    if (value === undefined) {
-      delete config[parts[0]];
-    } else {
-      config[parts[0]] = value;
-    }
-    return;
-  }
-
-  let target = config;
-  for (let i = 0; i < (parts.length - 1); i += 1) {
-    const key = parts[i];
-    if (!target[key] || typeof target[key] !== "object") {
-      target[key] = {};
-    }
-    target = target[key];
-  }
-
-  const leaf = parts[parts.length - 1];
-  if (value === undefined) {
-    delete target[leaf];
-  } else {
-    target[leaf] = value;
-  }
-
-  pruneEmptyPath(config, parts);
-}
-
-function pruneEmptyPath(config, parts) {
-  for (let i = parts.length - 1; i > 0; i -= 1) {
-    const parentPath = parts.slice(0, i);
-    const parent = getPathValue(config, parentPath);
-    if (!parent || typeof parent !== "object" || Object.keys(parent).length > 0) {
-      continue;
-    }
-
-    const container = i === 1 ? config : getPathValue(config, parts.slice(0, i - 1));
-    if (container && typeof container === "object") {
-      delete container[parts[i - 1]];
-    }
-  }
-}
-
-function getPathValue(config, parts) {
-  let value = config;
-  for (const part of parts) {
-    if (!value || typeof value !== "object") {
-      return undefined;
-    }
-    value = value[part];
-  }
-  return value;
 }
 
 function buildSegmentShells() {
@@ -2809,14 +1989,6 @@ function toFr(value) {
     return "0";
   }
   return n.toFixed(6);
-}
-
-function emitConfigChanged(target, config) {
-  target.dispatchEvent(new CustomEvent("config-changed", {
-    detail: { config },
-    bubbles: true,
-    composed: true,
-  }));
 }
 
 function syncSegmentVisibilityState(state, visibleKeys) {
