@@ -6,6 +6,8 @@ The format is based on Keep a Changelog and this project uses Semantic Versionin
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-14
+
 ### Changed
 - Refactored the Lovelace editor to use Home Assistant's native `ha-form` rendering (removed custom editor CSS/markup).
 - Updated editor field labels to short, descriptive wording across layout, palette, entities, icons, and hysteresis.
