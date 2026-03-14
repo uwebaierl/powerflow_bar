@@ -30,8 +30,23 @@ jobs:
       - name: Verify bundle syntax
         run: npm run check:syntax
 
+      - name: Prepare release notes from changelog
+        shell: bash
+        run: |
+          awk '
+            /^## \[Unreleased\]/ { capture=1; next }
+            /^## \[/ { if (capture) exit }
+            capture { print }
+          ' CHANGELOG.md > release_notes.md
+
+          if ! grep -q '[^[:space:]]' release_notes.md; then
+            echo "No release notes found under [Unreleased] in CHANGELOG.md" >&2
+            exit 1
+          fi
+
       - name: Create GitHub release and upload asset
         uses: softprops/action-gh-release@v2
         with:
           files: dist/powerflow_bar.js
-          generate_release_notes: true
+          body_path: release_notes.md
+          generate_release_notes: false
